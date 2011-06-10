@@ -11,12 +11,6 @@ crypto = require 'crypto'
 # Based on http://coffeescriptcookbook.com/chapters/objects/cloning
 exports.Database = class Database
     constructor: (dbName, db) ->
-        @db = []
-        @dbName = dbName
-        @id = 1
-
-        @append doc for doc in db if db
-
         # (Should, but won't be) Private methods
         # Non-fancy MongoDB-esque database query "enabler"
         @evaluate = (key, value, doc) ->
@@ -58,6 +52,12 @@ exports.Database = class Database
                 newInstance[key] = @clone obj[key]
 
             newInstance
+
+        @db = []
+        @dbName = dbName
+        @id = 1
+
+        @append doc for doc in db if db
 
         @
 
@@ -102,7 +102,7 @@ exports.Database = class Database
 
         @db.push(doc)
 
-        @clone doc
+        return @clone(doc)
 
     remove: (doc) ->
         throw new Error "Document should have the _id property" if not doc._id?
