@@ -85,7 +85,8 @@ Installation
 ------------
 
 Clone the repository and then
-	sudo npm install -g <repository name>
+
+    sudo npm install -g cjs-db
 
 Usage
 -----
