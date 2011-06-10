@@ -39,9 +39,16 @@ exports.Database = class Database
             for property in doc._staple
                 docs = []
                 for ref in doc[property]
-                    revision = @find _id: ref._id, true if ref._type is doc._type
+                    revision = @findSingle _id: ref._id, true if ref._type is doc._type
+                    if not revision?
+                        revision = @clone ref
+                        revision._inconsistent = yes
+
                     docs.push revision
+
                 doc[property] = docs
+
+
 
         # Based on http://coffeescriptcookbook.com/chapters/objects/cloning
         @clone = (obj) ->
@@ -63,10 +70,13 @@ exports.Database = class Database
 
     find: (obj, returnSingle=false) ->
         result = []
+        removed = []
         for doc in @db.reverse(@db)
             found = no
+            removed[doc._id] = yes if doc._removed
+            continue if removed[doc._id]?
             for key, value of obj
-                break if not doc._removed? and (found = @evaluate key, value, doc)
+                break if (found = @evaluate key, value, doc)
 
             result.push doc if found
 
@@ -84,8 +94,12 @@ exports.Database = class Database
             @processStaples newInstance
             newResult.push newInstance
 
-        return newResult[0] if returnSingle and newResult.length is 1
+        return newResult[0] if returnSingle and newResult.length >= 1
+        return null if newResult.length is 0
         newResult.reverse(newResult)
+
+    findSingle: (obj) ->
+        @find obj, true
 
     append: (doc) ->
         if not doc._id?
@@ -102,10 +116,11 @@ exports.Database = class Database
 
         @db.push(doc)
 
-        return @clone(doc)
+        @clone doc
 
     remove: (doc) ->
         throw new Error "Document should have the _id property" if not doc._id?
+        doc = @clone doc
         doc._removed = true
         @append(doc)
 
@@ -134,3 +149,14 @@ exports.Database = class Database
         to._staple.push property if property not in to._staple
 
         @append to
+
+    copy: (from, to, property) ->
+        throw new Error "Cannot copy to an undefined property" if not property? or typeof(property) isnt 'string' or property is ''
+        to[property] ?= []
+        from._copy = new Date().getTime()
+        to[property].push from
+
+        @append to
+
+
+

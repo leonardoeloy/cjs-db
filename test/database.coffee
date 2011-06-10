@@ -2,7 +2,6 @@ vows = require 'vows'
 assert = require 'assert'
 sys = require 'sys'
 puts = console.log
-# FIXME Circumvent this require stuff
 db = require '../lib/cjs-db'
 
 ###
@@ -23,13 +22,13 @@ vows
             'with no documents':
                 topic: new db.Database 'example'
 
-                'the database is empty': (topic) ->
+                'the database should be empty': (topic) ->
                     assert.equal topic.db.length, 0
 
             'with documents':
                 topic: new db.Database('example', [{property: "value"}])
 
-                'the database isn\'t empty': (topic) ->
+                'the database should not be empty': (topic) ->
                     assert.notEqual topic.db.length, 0
                     assert.equal topic.db[0]._id, 1
 
@@ -143,6 +142,22 @@ vows
                 doc = topic.find name: "Clark"
                 assert.equal doc[0]._id, 1
 
+            'it should have a way return the document instance instead of an array': (topic) ->
+                clark = topic.findSingle name: "Clark"
+                assert.equal typeof(clark), 'object'
+                assert.equal clark.name, 'Clark'
+
+            'it should return null when querying for a single result': (topic) ->
+                doc = topic.findSingle name: "John"
+                assert.equal doc, null
+
+            'it should ignore removed documents before compaction': ->
+                topic = new db.Database 'example'
+                clark = topic.append name: 'Clark'
+                topic.remove clark
+                clark = topic.findSingle name: 'Clark'
+                assert.equal clark, null
+
             'it should be able to find matches using binary operators':
                 'comparing strings values': (topic) ->
                     doc = topic.find { name: { "!=": "Clark" } }
@@ -214,12 +229,48 @@ vows
                             color: "red"
 
                     topic.append doc
-                    joker = topic.find name: "Joker", true
-                    bruce = topic.find name: "Bruce", true
+                    joker = topic.findSingle name: "Joker"
+                    bruce = topic.findSingle name: "Bruce"
                     topic.staple joker, bruce, 'closeFriends'
 
-                    bruce = topic.find name: "Bruce", true
+                    bruce = topic.findSingle name: "Bruce"
                     assert.equal bruce.closeFriends[0].name, 'Robin'
                     assert.equal bruce.closeFriends[1].name, 'Joker'
+
+                'it should flag removed referenced with _inconsistent': (topic) ->
+                    joker = topic.findSingle name: "Joker"
+                    topic.remove joker
+                    bruce = topic.findSingle name: "Bruce"
+                    assert.equal bruce.closeFriends.length, 2
+                    assert.equal bruce.closeFriends[1]._inconsistent, yes
+
+        'when copying a document':
+            'it should expect a filled property': ->
+                topic = new db.Database 'example'
+                bruce = topic.find name: 'Bruce', true
+                robin = topic.find name: 'Robin', true
+                assert.throws -> topic.copy robin, bruce, null
+                assert.throws -> topic.copy robin, bruce, ''
+                assert.throws -> topic.copy robin, bruce, 1
+
+            'it should duplicate the document\'s structure': ->
+                topic = new db.Database 'musician'
+                miles = topic.append name: "Miles Davis", style: "jazz"
+                coltrane = topic.append name: "John Coltrane", style: "jazz"
+                morse = topic.append name: "Neal Morse", style: "progressive rock"
+
+                topic.copy miles, morse, 'influences'
+                morse = topic.findSingle _id: morse._id
+                assert.equal morse.influences[0].name, miles.name
+
+            'it should duplicate the document\'s structure and keep it after removed': ->
+                topic = new db.Database 'musician'
+                miles = topic.append name: "Miles Davis", style: "jazz"
+                coltrane = topic.append name: "John Coltrane", style: "jazz"
+                morse = topic.append name: "Neal Morse", style: "progressive rock"
+
+                topic.copy miles, morse, 'influences'
+                topic.remove miles
+                morse = topic.findSingle _id: morse._id
 
     .run()

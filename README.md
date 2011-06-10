@@ -79,8 +79,6 @@ Taking the above mentioned example:
        +-----------+
 
 
-TODO: Implement.
-
 Installation
 ------------
 
@@ -109,7 +107,7 @@ CoffeeScript:
     # Query the database, returning an array of results
     person = docs.find name: 'Johnny'
     # Returns only one result, if available
-    miles = docs.find name: 'Miles', true
+    miles = docs.findSingle name: 'Miles'
     # Returns Johnny in an array
     person = docs.find { name: { '!=': 'Miles' } }
     # Returns all docs with id > 0
@@ -138,7 +136,17 @@ CoffeeScript:
     # See who's Johnny #1 favorite musician
     console.log johnny.favoriteMusicians[0].name
 
-    # TODO: Work on copy
+    # Copy
+    morse = docs.append name: 'Neal', surname: 'Morse'
+    docs.copy miles, morse, 'influences'
+    morse = docs.findSingle name: 'Neal'
+    # Should get 'Miles'
+    console.log morse.influences[0].name
+    # Remove the copyied document
+    docs.remove miles
+    morse = docs.findSingle name: "Neal"
+    # Should get 'Miles' again
+    console.log morse.influences[0].name
 
 Javascript:
 
@@ -159,7 +167,7 @@ Javascript:
     // Query the database, returning an array of results
     var person = docs.find({name: 'Johnny'});
     // Returns only one result, if available
-    var miles = docs.find({name: 'Miles'}, true);
+    var miles = docs.findSingle({name: 'Miles'});
     // Returns Johnny in an array
     var person = docs.find({name: { '!=': 'Miles'}});
     // Returns all docs with id > 0
@@ -186,6 +194,22 @@ Javascript:
     var johnny = docs.find({name: 'Johnny'}, true);
     // See who's Johnny #1 favorite musician
     console.log(johnny.favoriteMusicians[0].name);
+
+    // Copy
+    var morse = docs.append({
+        name: 'Neal', 
+        surname: 'Morse'
+    });
+    docs.copy(miles, morse, 'influences');
+    morse = docs.findSingle({name: "Neal"});
+    // Should get 'Miles'
+    console.log(morse.influences[0].name);
+    // Remove the copyied document
+    docs.remove miles
+    morse = docs.findSingle({ name: "Neal" });
+    // Should get 'Miles' again
+    console.log(morse.influences[0].name);
+
    
 License
 -------
