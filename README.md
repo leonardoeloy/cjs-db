@@ -64,7 +64,7 @@ Copy
 The copy concept is very similiar to staple. The only difference is that updates in the copy won't reflect in changes in the original revision. 
 Thus, the copy is a part of the document that it's being stapled to. 
 
-Taking the above metioned example:
+Taking the above mentioned example:
 
 	+----------+       +-----------+
 	| Client A |       | Receipt 1 |
