@@ -1,0 +1,20 @@
+{
+  "name": "cjs-db",
+  "description": "Proof of concept database",
+  "version": "0.1.1",
+
+  "author": "Leonardo Eloy <leonardo.eloy@gmail.com>",
+
+  "dependencies": {
+    "coffee-script": ">= 1.0.1",
+    "vows": ">= 0.5.8"
+  },
+
+  "engine": ["node >= 0.4.2"],
+
+  "main": "./lib/cjs-db",
+
+  "scripts": {
+    "install": "cake build"
+  }
+}
