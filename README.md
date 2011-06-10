@@ -88,6 +88,12 @@ Clone the repository and then
 
     sudo npm install -g cjs-db
 
+
+Tests
+-----
+
+    cake test
+
 Usage
 -----
 
